@@ -56,3 +56,29 @@ async def update_or_add_posts(updated_posts: List[Post]):
         else:
             posts_db.append(new_post)
     return posts_db
+
+# bonus
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import PlainTextResponse
+import base64
+
+app = FastAPI()
+
+@app.get("/ping", response_class=PlainTextResponse)
+def ping():
+    return "pong"
+
+@app.get("/ping/auth", response_class=PlainTextResponse)
+def ping_auth(request: Request):
+    auth_header = request.headers.get("Authorization")
+    if auth_header is None or not auth_header.startswith("Basic "):
+        raise HTTPException(status_code=401, detail="Authentification requise")
+    encoded_credentials = auth_header.split(" ")[1]
+    try:
+        decoded_credentials = base64.b64decode(encoded_credentials).decode("utf-8")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Identifiants mal formés")
+    if decoded_credentials == "admin:123456":
+        return "pong"
+    else:
+        raise HTTPException(status_code=401, detail="Identifiants invalides")
